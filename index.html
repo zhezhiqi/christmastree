@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>圣诞快乐</title>
     <link rel="stylesheet" href="./normalize.css">
     <link rel="stylesheet" href="./default.css">
@@ -31,39 +31,41 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: #000000;
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh; /* 替换height，适配手机滚动 */
+            overflow-x: hidden; /* 只隐藏横向滚动，保留纵向 */
             cursor: pointer;
             position: relative;
         }
-        /* 视频样式 */
+        /* 视频样式 - 响应式适配 */
         #bgVideo {
             position: absolute;
             top: 50%; 
             left: 50%; 
             transform: translate(-50%, -50%); 
-            width: 60%; 
+            width: 100%; /* 手机端占满宽度 */
+            max-width: 800px; /* 电脑端限制最大宽度 */
             height: auto; 
             z-index: -2;
             filter: brightness(1.0); 
             border-radius: 10px;
         }
-        /* 圣诞背景图 */
+        /* 圣诞背景图 - 响应式 */
         .christmas-bg {
             position: absolute;
             width: 100%;
             height: 100%;
-            object-fit: contain;
+            object-fit: cover; /* 替换contain，避免手机端留白 */
             z-index: 1;
             opacity: 1;
         }
-        /* 文字容器 */
+        /* 文字容器 - 响应式定位和大小 */
         .type-wrap {
             position: absolute;
-            top: 30%;
-            left: 10%;
+            top: 20%; /* 手机端上移，避免被遮挡 */
+            left: 5%; /* 手机端减少左间距 */
+            right: 5%; /* 新增右间距，限制文字宽度 */
             z-index: 6;
-            font-size: 18px;
+            font-size: calc(14px + 0.5vw); /* 自适应字体大小 */
             line-height: 1.8;
         }
         /* 文字渐变（仅作用于纯文字） */
@@ -83,17 +85,19 @@
             background-clip: initial;
             text-shadow: none;
         }
-        /* 大标题样式 */
+        /* 大标题样式 - 响应式 */
         .merry-title {
             position: absolute;
-            top: 40%;
+            top: 50%; /* 手机端下移，适配布局 */
             left: 50%;
-            transform: translateX(-50%);
+            transform: translate(-50%, -50%);
             z-index: 5;
-            font-size: 40px;
+            font-size: calc(24px + 2vw); /* 自适应字体 */
             color: #fefefe;
             font-family: "Brush Script MT", cursive;
             text-shadow: 2px 2px 10px rgba(255,215,0,0.8);
+            text-align: center; /* 手机端居中对齐 */
+            width: 90%; /* 限制标题宽度，避免溢出 */
         }
         /* 雪花容器 */
         #divSnow-1 {
@@ -103,6 +107,20 @@
             z-index: 4;
             pointer-events: none;
         }
+
+        /* 媒体查询 - 针对小屏手机的额外适配 */
+        @media (max-width: 480px) {
+            .type-wrap {
+                top: 15%; /* 更小屏上移更多 */
+                font-size: 14px; /* 固定最小字体 */
+            }
+            .merry-title {
+                top: 55%; /* 更小屏标题再下移 */
+            }
+            #bgVideo {
+                border-radius: 0; /* 手机端去掉视频圆角，避免黑边 */
+            }
+        }
     </style>
 </head>
 <body onclick="playAll()">
@@ -110,9 +128,6 @@
     <video id="bgVideo" loop muted preload="auto">
         <source src="./christmas.mp4" type="video/mp4">
     </video>
-
-    <!-- 圣诞树背景图 -->
-    < img class="christmas-bg" src="./christmas-tree.png" alt="圣诞背景">
 
     <!-- 雪花容器 -->
     <div id="divSnow-1"></div>
@@ -126,7 +141,7 @@
     <!-- 大标题 -->
     <div class="merry-title">Merry Christmas</div>
 
-    <!-- 背景音乐 -->
+    <!-- 背景音乐（补全闭合标签） -->
     <audio id="audio" src="https://sf6-cdn-tos.douyinstatic.com/obj/ies-music/6905357668872063752.mp3" preload="auto" loop>
 
     <!-- 引入本地JS文件 -->
@@ -137,11 +152,14 @@
     <script>
         // 初始化雪花
         document.addEventListener('DOMContentLoaded', function(){
-            $("#divSnow-1").websnowjq({
-                count: 150, 
-                size: 3,    
-                speed: 2    
-            });
+            // 兼容jQuery未加载的情况
+            if (window.jQuery) {
+                $("#divSnow-1").websnowjq({
+                    count: 250, 
+                    size: 6,    
+                    speed: 4    
+                });
+            }
 
             // 定义带标签的文字内容（emoji用span包裹保留原色）
             const strings = [
@@ -150,19 +168,23 @@
                 '<span class="text-gradient">希望汪子默所求皆如愿，所行皆坦途，圣诞喜乐！</span>'
             ];
 
-            // 初始化打字动画，支持HTML标签
-            Typed.new("#typed", {
-                strings: strings,
-                typeSpeed: 110,
-                loop: false,
-                contentType: 'html' // 关键：开启HTML解析，让span标签生效
-            });
+            // 初始化打字动画，支持HTML标签（兼容Typed未加载）
+            if (window.Typed) {
+                Typed.new("#typed", {
+                    strings: strings,
+                    typeSpeed: 110,
+                    loop: false,
+                    contentType: 'html' // 关键：开启HTML解析，让span标签生效
+                });
+            }
         });
 
-        // 播放视频+音乐
+        // 播放视频+音乐（增加兼容性判断）
         function playAll() {
-            document.getElementById('bgVideo').play();
-            document.getElementById('audio').play();
+            const video = document.getElementById('bgVideo');
+            const audio = document.getElementById('audio');
+            if (video) video.play().catch(err => console.log('视频播放失败：', err));
+            if (audio) audio.play().catch(err => console.log('音乐播放失败：', err));
         }
     </script>
 </body>
